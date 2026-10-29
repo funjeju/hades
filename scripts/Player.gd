@@ -231,7 +231,8 @@ func _melee_attack() -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		var to: Vector3 = enemy.global_position - global_position
 		to.y = 0.0
-		if to.length() > melee_range:
+		# 사거리는 적 몸 가장자리까지 잰다(덩치처럼 큰 적도 붙으면 맞게).
+		if to.length() - enemy.body_radius > melee_range:
 			continue
 		if to.length() < 0.01 or rad_to_deg(aim.angle_to(to)) <= melee_angle * 0.5:
 			enemy.take_damage(melee_damage, global_position, melee_knockback)

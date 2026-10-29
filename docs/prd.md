@@ -151,7 +151,7 @@ EnemyArrow.tscn (Area3D)
 입력 맵: move(마우스 좌), move_up/move_down/move_left/move_right(W/S/A/D), attack_melee(마우스 우), cast_missile(Q), teleport(Space), restart(R).
 
 - 이동: Player는 목표 지점을 저장하고 매 프레임 그쪽으로 velocity를 주어 move_and_slide(). 0.2 m 안으로 들어오면 멈춤.
-- 근접 판정: 사거리 안의 적 중 플레이어 정면과의 각도가 45° 이내인 적을 골라 피해(Area3D 없이 거리·각도 계산만으로 처리).
+- 근접 판정: 사거리 안의 적 중 플레이어 정면과의 각도가 45° 이내인 적을 골라 피해(Area3D 없이 거리·각도 계산만으로 처리). 사거리는 적 몸(캡슐) 가장자리까지 잰다. 덩치는 2 m에서 멈추므로 중심까지 재면 1.8 m 근접이 닿지 않는다.
 - 피해 전달: 공격하는 쪽이 대상의 take_damage(amount, from_position)을 호출한다. 플레이어와 적이 같은 이름의 함수를 갖는다.
 - 신호: Player.died, Player.health_changed, Enemy.died, WaveManager.wave_started, WaveManager.remaining_changed(남은 적 수가 바뀔 때), WaveManager.all_waves_cleared. HUD와 결과 화면은 신호만 듣는다.
 - WaveManager: 웨이브 구성표는 `waves`(Array[Vector3i], 근거리·원거리·덩치 마릿수)로 인스펙터에서 바꾼다. 처치 수(kills)와 경과 시간(elapsed)도 갖고 있어 결과 화면이 읽는다.
@@ -220,9 +220,9 @@ EnemyArrow.tscn (Area3D)
 
 ### 5단계. 원거리·덩치 적
 
-- [ ] 5.1 RangedEnemy.tscn: 거리 유지 이동 + EnemyArrow 발사
-- [ ] 5.2 BruteEnemy.tscn: 바닥 경고 원 0.8초 후 범위 내려찍기, 넉백 무시
-- [ ] 5.3 적 머리 위 체력 바
+- [x] 5.1 RangedEnemy.tscn: 거리 유지 이동 + EnemyArrow 발사
+- [x] 5.2 BruteEnemy.tscn: 바닥 경고 원 0.8초 후 범위 내려찍기, 넉백 무시
+- [x] 5.3 적 머리 위 체력 바
 
 * 확인: 화살은 순간이동이나 나무 뒤로 숨어 피할 수 있고, 덩치의 빨간 원 밖으로 나가면 안 맞는다.
 

@@ -1,0 +1,40 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/RangedEnemy.gd" id="1_ranged"]
+[ext_resource type="PackedScene" path="res://scenes/EnemyArrow.tscn" id="2_arrow"]
+
+[sub_resource type="CapsuleShape3D" id="Shape_body"]
+radius = 0.4
+height = 1.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_body"]
+albedo_color = Color(1, 0.55, 0.1, 1)
+
+[sub_resource type="CapsuleMesh" id="Mesh_body"]
+material = SubResource("Mat_body")
+radius = 0.4
+height = 1.6
+
+[node name="RangedEnemy" type="CharacterBody3D"]
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_ranged")
+max_health = 20.0
+move_speed = 2.5
+attack_range = 9.0
+miss_range = 20.0
+attack_damage = 8.0
+windup_time = 0.5
+attack_interval = 2.0
+windup_color = Color(1, 1, 0.45, 1)
+health_bar_height = 2.0
+arrow_scene = ExtResource("2_arrow")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("Shape_body")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+mesh = SubResource("Mesh_body")

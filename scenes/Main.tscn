@@ -5,6 +5,8 @@
 [ext_resource type="Script" path="res://scripts/CameraRig.gd" id="3_camrig"]
 [ext_resource type="PackedScene" path="res://scenes/MeleeEnemy.tscn" id="4_melee"]
 [ext_resource type="Script" path="res://scripts/DebugHud.gd" id="5_debughud"]
+[ext_resource type="PackedScene" path="res://scenes/RangedEnemy.tscn" id="6_ranged"]
+[ext_resource type="PackedScene" path="res://scenes/BruteEnemy.tscn" id="7_brute"]
 
 [sub_resource type="BoxShape3D" id="Shape_ground"]
 size = Vector3(40, 1, 40)
@@ -164,11 +166,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -6)
 [node name="MeleeEnemy2" parent="Enemies" instance=ExtResource("4_melee")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 0)
 
-[node name="MeleeEnemy3" parent="Enemies" instance=ExtResource("4_melee")]
+[node name="RangedEnemy" parent="Enemies" instance=ExtResource("6_ranged")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 10)
 
-[node name="MeleeEnemy4" parent="Enemies" instance=ExtResource("4_melee")]
+[node name="RangedEnemy2" parent="Enemies" instance=ExtResource("6_ranged")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, 3)
+
+[node name="BruteEnemy" parent="Enemies" instance=ExtResource("7_brute")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 8)
 
 [node name="Projectiles" type="Node3D" parent="."]
 
