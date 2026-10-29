@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/DebugHud.gd" id="5_debughud"]
 [ext_resource type="PackedScene" path="res://scenes/RangedEnemy.tscn" id="6_ranged"]
 [ext_resource type="PackedScene" path="res://scenes/BruteEnemy.tscn" id="7_brute"]
+[ext_resource type="Script" path="res://scripts/WaveManager.gd" id="8_wave"]
 
 [sub_resource type="BoxShape3D" id="Shape_ground"]
 size = Vector3(40, 1, 40)
@@ -160,26 +161,21 @@ environment = SubResource("Env_main")
 
 [node name="Enemies" type="Node3D" parent="."]
 
-[node name="MeleeEnemy" parent="Enemies" instance=ExtResource("4_melee")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -6)
-
-[node name="MeleeEnemy2" parent="Enemies" instance=ExtResource("4_melee")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 0)
-
-[node name="RangedEnemy" parent="Enemies" instance=ExtResource("6_ranged")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 10)
-
-[node name="RangedEnemy2" parent="Enemies" instance=ExtResource("6_ranged")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, 3)
-
-[node name="BruteEnemy" parent="Enemies" instance=ExtResource("7_brute")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 8)
-
 [node name="Projectiles" type="Node3D" parent="."]
 
-[node name="DebugHud" type="CanvasLayer" parent="." node_paths=PackedStringArray("player")]
+[node name="WaveManager" type="Node" parent="." node_paths=PackedStringArray("player", "spawn_points", "enemy_parent")]
+script = ExtResource("8_wave")
+melee_scene = ExtResource("4_melee")
+ranged_scene = ExtResource("6_ranged")
+brute_scene = ExtResource("7_brute")
+player = NodePath("../Player")
+spawn_points = NodePath("../World/SpawnPoints")
+enemy_parent = NodePath("../Enemies")
+
+[node name="DebugHud" type="CanvasLayer" parent="." node_paths=PackedStringArray("player", "wave_manager")]
 script = ExtResource("5_debughud")
 player = NodePath("../Player")
+wave_manager = NodePath("../WaveManager")
 
 [node name="CameraRig" type="Node3D" parent="." node_paths=PackedStringArray("target")]
 transform = Transform3D(0.7071068, 0, 0.7071068, 0, 1, 0, -0.7071068, 0, 0.7071068, 0, 0, 0)

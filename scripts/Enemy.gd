@@ -26,6 +26,8 @@ enum State { CHASE, WINDUP, RECOVER, DEAD }
 @export var flash_time := 0.1
 @export var death_time := 0.3
 @export var head_on_threshold := 0.9
+## 피격 깜빡임을 입힐 몸 메시. 가져온 3D 모델이면 그 안의 메시를 가리킨다.
+@export var body_path := NodePath("Body")
 
 @export_group("체력 바")
 @export var health_bar_height := 1.8
@@ -45,7 +47,7 @@ var _knock_left := 0.0
 var _bar_back: Sprite3D
 var _bar_fill: Sprite3D
 
-@onready var _body: MeshInstance3D = $Body
+@onready var _body: GeometryInstance3D = get_node(body_path)
 
 static var _white_material: StandardMaterial3D
 static var _windup_materials := {}

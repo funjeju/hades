@@ -1,9 +1,13 @@
 extends CanvasLayer
-## 3단계 확인용 임시 체력 표시. 7단계에서 HUD를 만들면 지운다.
+## 확인용 임시 표시(체력, 웨이브, 승리). 7단계에서 HUD를 만들면 지운다.
 
 @export var player: Node
+@export var wave_manager: Node
 
 var _label := Label.new()
+var _hp_text := ""
+var _wave_text := ""
+var _end_text := ""
 
 
 func _ready() -> void:
@@ -14,8 +18,30 @@ func _ready() -> void:
 	add_child(_label)
 	if player:
 		player.health_changed.connect(_on_health_changed)
-		player.died.connect(func(): _label.text += "  (쓰러짐)")
+		player.died.connect(func(): _set_end("쓰러짐"))
+	if wave_manager:
+		wave_manager.remaining_changed.connect(_on_remaining_changed)
+		wave_manager.all_waves_cleared.connect(_on_all_waves_cleared)
+
+
+func _on_remaining_changed(remaining: int) -> void:
+	_wave_text = "웨이브 %d / %d · 남은 적 %d" % [wave_manager.current_wave, wave_manager.waves.size(), remaining]
+	_refresh()
+
+
+func _on_all_waves_cleared() -> void:
+	_set_end("승리! 처치 %d · %.1f초" % [wave_manager.kills, wave_manager.elapsed])
 
 
 func _on_health_changed(current: float, maximum: float) -> void:
-	_label.text = "HP %d / %d" % [current, maximum]
+	_hp_text = "HP %d / %d" % [current, maximum]
+	_refresh()
+
+
+func _set_end(text: String) -> void:
+	_end_text = text
+	_refresh()
+
+
+func _refresh() -> void:
+	_label.text = "\n".join([_hp_text, _wave_text, _end_text]).strip_edges()
