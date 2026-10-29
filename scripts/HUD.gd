@@ -6,6 +6,7 @@ extends CanvasLayer
 @export var wave_manager: Node
 @export var banner_time := 1.5
 @export var vignette_time := 0.2
+@export var vignette_strength := 0.7
 @export var defeat_result_delay := 1.0
 @export var victory_result_delay := 0.6
 
@@ -16,7 +17,7 @@ shader_type canvas_item;
 uniform float intensity = 0.0;
 void fragment() {
 	float d = length(UV - vec2(0.5)) * 1.414;
-	COLOR = vec4(0.9, 0.05, 0.05, smoothstep(0.45, 1.0, d) * intensity);
+	COLOR = vec4(0.9, 0.05, 0.05, smoothstep(0.6, 1.05, d) * intensity);
 }
 """
 
@@ -122,9 +123,9 @@ func _show_result(victory: bool) -> void:
 func _flash_vignette() -> void:
 	if _vignette_tween:
 		_vignette_tween.kill()
-	_vignette_mat.set_shader_parameter("intensity", 0.85)
+	_vignette_mat.set_shader_parameter("intensity", vignette_strength)
 	_vignette_tween = create_tween()
-	_vignette_tween.tween_method(func(v: float): _vignette_mat.set_shader_parameter("intensity", v), 0.85, 0.0, vignette_time)
+	_vignette_tween.tween_method(func(v: float): _vignette_mat.set_shader_parameter("intensity", v), vignette_strength, 0.0, vignette_time)
 
 
 # --- 만들기 ---

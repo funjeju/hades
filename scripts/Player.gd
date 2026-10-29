@@ -336,7 +336,7 @@ func _die() -> void:
 	_body.visible = true
 	_nose.visible = true
 	var gray := StandardMaterial3D.new()
-	gray.albedo_color = Color(0.5, 0.5, 0.5)
+	gray.albedo_color = Color(0.32, 0.32, 0.34)
 	_body.material_override = gray
 	_nose.material_override = gray
 	died.emit()
