@@ -29,6 +29,19 @@ signal health_changed(current: float, maximum: float)
 @export var attack_lock_time := 0.15
 @export var slash_time := 0.1
 
+@export_group("매직 미사일")
+@export var missile_scene: PackedScene
+@export var missile_cooldown := 0.6
+## 몸 중심에서 앞으로 얼마나, 얼마나 높이에서 나가는지.
+@export var missile_forward_offset := 0.5
+@export var missile_height := 1.0
+
+@export_group("순간이동")
+@export var teleport_distance := 4.0
+@export var teleport_invuln_time := 0.3
+@export var teleport_cooldown := 3.0
+@export var teleport_effect_time := 0.3
+
 var health := 0.0
 var is_dead := false
 
@@ -37,6 +50,8 @@ var _has_target := false
 ## 공격으로 멈춘 뒤에는 누르고 있던 좌클릭을 무시하고, 새로 클릭해야 다시 걷는다.
 var _ignore_held_move := false
 var _melee_cooldown_left := 0.0
+var _missile_cooldown_left := 0.0
+var _teleport_cooldown_left := 0.0
 var _action_lock_left := 0.0
 var _invuln_left := 0.0
 var _blink_left := 0.0
@@ -44,8 +59,13 @@ var _marker: MeshInstance3D
 var _marker_tween: Tween
 var _slash: MeshInstance3D
 var _slash_tween: Tween
+var _teleport_from_fx: MeshInstance3D
+var _teleport_to_fx: MeshInstance3D
+var _teleport_from_tween: Tween
+var _teleport_to_tween: Tween
 
-@onready var _radius: float = ($CollisionShape3D.shape as CapsuleShape3D).radius
+@onready var _shape_node: CollisionShape3D = $CollisionShape3D
+@onready var _radius: float = (_shape_node.shape as CapsuleShape3D).radius
 @onready var _body: MeshInstance3D = $Body
 @onready var _nose: MeshInstance3D = $Nose
 
@@ -57,14 +77,22 @@ func _ready() -> void:
 	add_child(_marker)
 	_slash = _make_slash()
 	add_child(_slash)
-	_prewarm([_marker, _slash])
+	var ring := _make_teleport_ring()
+	_teleport_from_fx = _make_effect(ring)
+	_teleport_to_fx = _make_effect(ring)
+	add_child(_teleport_from_fx)
+	add_child(_teleport_to_fx)
+	_prewarm([_marker, _slash, _teleport_from_fx])
+	_prewarm_missile.call_deferred()
 	health_changed.emit.call_deferred(health, max_health)
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if is_dead:
 		return
-	if event.is_action_pressed("move"):
+	if event.is_action_pressed("teleport"):
+		_try_teleport()
+	elif event.is_action_pressed("move"):
 		_ignore_held_move = false
 		var point = get_mouse_ground_point()
 		if point != null:
@@ -76,12 +104,16 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 	_melee_cooldown_left -= delta
+	_missile_cooldown_left -= delta
+	_teleport_cooldown_left -= delta
 	_action_lock_left -= delta
 	_invuln_left -= delta
 	_update_blink(delta)
 
 	if Input.is_action_pressed("attack_melee") and _melee_cooldown_left <= 0.0:
 		_melee_attack()
+	if Input.is_action_pressed("cast_missile") and _missile_cooldown_left <= 0.0:
+		_cast_missile()
 
 	velocity = Vector3.ZERO
 	if _action_lock_left <= 0.0:
@@ -206,6 +238,78 @@ func _melee_attack() -> void:
 	_show_slash()
 
 
+func _cast_missile() -> void:
+	if missile_scene == null:
+		return
+	_missile_cooldown_left = missile_cooldown
+	var aim := _get_aim_direction()
+	_begin_action(aim)
+	var missile := missile_scene.instantiate()
+	missile.direction = aim
+	_get_projectile_parent().add_child(missile)
+	missile.global_position = global_position + aim * missile_forward_offset + Vector3.UP * missile_height
+	missile.reset_physics_interpolation()
+
+
+## 커서 방향 최대 teleport_distance 지점(커서가 더 가까우면 커서 지점)으로 순간이동.
+## 도착점이 나무·벽과 겹치거나 맵 밖이면 발동하지 않고 쿨다운도 쓰지 않는다.
+func _try_teleport() -> void:
+	if _teleport_cooldown_left > 0.0:
+		return
+	var point = get_mouse_ground_point()
+	if point == null:
+		return
+	var offset: Vector3 = point - global_position
+	offset.y = 0.0
+	if offset.length() < 0.05:
+		return
+	offset = offset.limit_length(teleport_distance)
+	var dest := global_position + offset
+	if not _is_free_spot(dest):
+		return
+
+	var from := global_position
+	_teleport_cooldown_left = teleport_cooldown
+	_has_target = false
+	_ignore_held_move = true
+	global_position = dest
+	rotation.y = atan2(-offset.x, -offset.z)
+	reset_physics_interpolation()
+	_invuln_left = maxf(_invuln_left, teleport_invuln_time)
+	_teleport_from_tween = _flash_effect(_teleport_from_fx, _teleport_from_tween, from + Vector3(0.0, 0.04, 0.0), 0.0, teleport_effect_time)
+	_teleport_to_tween = _flash_effect(_teleport_to_fx, _teleport_to_tween, dest + Vector3(0.0, 0.04, 0.0), 0.0, teleport_effect_time)
+
+
+## 플레이어 몸(캡슐)을 그 자리에 놓아 보고 나무·벽과 겹치는지 검사한다.
+func _is_free_spot(dest: Vector3) -> bool:
+	var limit := map_half_size - 0.5 - _radius
+	if absf(dest.x) > limit or absf(dest.z) > limit:
+		return false
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = _shape_node.shape
+	# 바닥과 닿아서 겹침으로 잡히지 않게 살짝 띄운다.
+	query.transform = Transform3D(Basis(), dest + _shape_node.position + Vector3(0.0, 0.05, 0.0))
+	query.collision_mask = 1
+	query.exclude = [get_rid()]
+	return get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
+
+
+func _get_projectile_parent() -> Node:
+	var scene := get_tree().current_scene
+	var container := scene.get_node_or_null("Projectiles")
+	return container if container else scene
+
+
+## 첫 발사 때 셰이더 컴파일로 멈추지 않게 미사일과 맞는 효과를 땅 밑에서 한 번 그린다.
+func _prewarm_missile() -> void:
+	if missile_scene == null:
+		return
+	var missile := missile_scene.instantiate()
+	missile.prewarm = true
+	_get_projectile_parent().add_child(missile)
+	missile.global_position = Vector3(0.0, -3.0, 0.0)
+
+
 func _update_blink(delta: float) -> void:
 	if _blink_left <= 0.0:
 		return
@@ -265,6 +369,18 @@ func _make_slash() -> MeshInstance3D:
 	mat.albedo_color = Color(0.75, 0.9, 1.0, 0.55)
 	mesh.surface_set_material(0, mat)
 	return _make_effect(mesh)
+
+
+## 순간이동 출발점·도착점에 뜨는 파란 원. 두 효과가 같은 메시를 쓴다.
+func _make_teleport_ring() -> Mesh:
+	var mesh := TorusMesh.new()
+	mesh.inner_radius = 0.45
+	mesh.outer_radius = 0.65
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(0.3, 0.55, 1.0)
+	mesh.material = mat
+	return mesh
 
 
 func _make_effect(mesh: Mesh) -> MeshInstance3D:
