@@ -139,6 +139,15 @@ func take_damage(amount: float, _from_position: Vector3, _knockback := 0.0) -> v
 	_blink_left = hit_invuln_time
 
 
+## HUD 스킬 칸용: 근접, 미사일, 순간이동 순서로 (남은 초, 전체 쿨다운).
+func get_skill_cooldowns() -> Array[Vector2]:
+	return [
+		Vector2(maxf(_melee_cooldown_left, 0.0), melee_cooldown),
+		Vector2(maxf(_missile_cooldown_left, 0.0), missile_cooldown),
+		Vector2(maxf(_teleport_cooldown_left, 0.0), teleport_cooldown),
+	]
+
+
 ## 카메라에서 마우스 위치로 광선을 쏴 바닥 평면(y = 0)과 만나는 점. 못 찾으면 null.
 func get_mouse_ground_point() -> Variant:
 	var camera := get_viewport().get_camera_3d()

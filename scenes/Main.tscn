@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="2_player"]
 [ext_resource type="Script" path="res://scripts/CameraRig.gd" id="3_camrig"]
 [ext_resource type="PackedScene" path="res://scenes/MeleeEnemy.tscn" id="4_melee"]
-[ext_resource type="Script" path="res://scripts/DebugHud.gd" id="5_debughud"]
+[ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="5_hud"]
 [ext_resource type="PackedScene" path="res://scenes/RangedEnemy.tscn" id="6_ranged"]
 [ext_resource type="PackedScene" path="res://scenes/BruteEnemy.tscn" id="7_brute"]
 [ext_resource type="Script" path="res://scripts/WaveManager.gd" id="8_wave"]
@@ -172,8 +172,7 @@ player = NodePath("../Player")
 spawn_points = NodePath("../World/SpawnPoints")
 enemy_parent = NodePath("../Enemies")
 
-[node name="DebugHud" type="CanvasLayer" parent="." node_paths=PackedStringArray("player", "wave_manager")]
-script = ExtResource("5_debughud")
+[node name="HUD" parent="." node_paths=PackedStringArray("player", "wave_manager") instance=ExtResource("5_hud")]
 player = NodePath("../Player")
 wave_manager = NodePath("../WaveManager")
 
