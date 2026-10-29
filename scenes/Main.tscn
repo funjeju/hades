@@ -1,8 +1,10 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Tree.tscn" id="1_tree"]
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="2_player"]
 [ext_resource type="Script" path="res://scripts/CameraRig.gd" id="3_camrig"]
+[ext_resource type="PackedScene" path="res://scenes/MeleeEnemy.tscn" id="4_melee"]
+[ext_resource type="Script" path="res://scripts/DebugHud.gd" id="5_debughud"]
 
 [sub_resource type="BoxShape3D" id="Shape_ground"]
 size = Vector3(40, 1, 40)
@@ -153,6 +155,15 @@ directional_shadow_max_distance = 60.0
 environment = SubResource("Env_main")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="MeleeEnemy" parent="Enemies" instance=ExtResource("4_melee")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -6)
+
+[node name="DebugHud" type="CanvasLayer" parent="." node_paths=PackedStringArray("player")]
+script = ExtResource("5_debughud")
+player = NodePath("../Player")
 
 [node name="CameraRig" type="Node3D" parent="." node_paths=PackedStringArray("target")]
 transform = Transform3D(0.7071068, 0, 0.7071068, 0, 1, 0, -0.7071068, 0, 0.7071068, 0, 0, 0)
